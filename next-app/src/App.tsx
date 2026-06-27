@@ -69,7 +69,7 @@ export function App() {
           margin: 0,
           userSelect: 'none',
         }}>
-          Would you go on a date with me zee?
+          Would you go on a date with me zae?
         </h1>
 
         {/* Buttons */}
