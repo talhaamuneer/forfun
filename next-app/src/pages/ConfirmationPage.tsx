@@ -82,7 +82,7 @@ export default function ConfirmationPage() {
   useEffect(() => {
     const save = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const apiUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
         const res = await fetch(`${apiUrl}/api/booking`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
