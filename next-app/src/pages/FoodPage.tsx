@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Lightfall from '../components/Lightfall';
+import GridDistortion from '../components/GridDistortion';
 
 const font = "'Inter', 'Segoe UI', sans-serif";
 
@@ -41,22 +41,13 @@ export default function FoodPage() {
     <div style={{ width: '100%', minHeight: '100vh', position: 'relative' }}>
       {/* background */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}>
-        <Lightfall
-          colors={['#A6C8FF', '#5227FF', '#FF9FFC']}
-          backgroundColor="#0A29FF"
-          speed={0.5}
-          streakCount={2}
-          streakWidth={1}
-          streakLength={1}
-          glow={1}
-          density={0.6}
-          twinkle={1}
-          zoom={3}
-          backgroundGlow={0.5}
-          opacity={1}
-          mouseInteraction
-          mouseStrength={0.5}
-          mouseRadius={1}
+        <GridDistortion
+          imageSrc="https://images.unsplash.com/photo-1620121692029-d088224ddc74?q=80&w=3432&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          grid={12}
+          mouse={0.12}
+          strength={0.18}
+          relaxation={0.92}
+          className="absolute inset-0"
         />
       </div>
 
@@ -212,8 +203,8 @@ export default function FoodPage() {
               transform: ctaEnabled ? 'scale(1)' : 'scale(0.98)',
               opacity: ctaEnabled ? 1 : 0.5,
             }}
-            onMouseEnter={e => { if (ctaEnabled) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.02)'; }}
-            onMouseLeave={e => { if (ctaEnabled) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+            onMouseEnter={e => { if (ctaEnabled) e.currentTarget.style.transform = 'scale(1.02)'; }}
+            onMouseLeave={e => { if (ctaEnabled) e.currentTarget.style.transform = 'scale(1)'; }}
           >
             {ctaText}
           </button>

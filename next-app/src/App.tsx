@@ -1,11 +1,12 @@
 // import { Button } from "@/components/ui/button"
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Lightfall from './components/Lightfall';
+import GridDistortion from './components/GridDistortion';
 
 export function App() {
   const navigate = useNavigate();
   const [noPos, setNoPos] = useState<{ top: string; left: string } | null>(null);
+  const floatingNoPos = noPos;
 
   const dodgeCursor = useCallback(() => {
     const padding = 80;
@@ -20,28 +21,36 @@ export function App() {
 
   return (
     <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
-      <Lightfall
-        colors={['#A6C8FF', '#5227FF', '#FF9FFC']}
-        backgroundColor="#0A29FF"
-        speed={0.5}
-        streakCount={2}
-        streakWidth={1}
-        streakLength={1}
-        glow={1}
-        density={0.6}
-        twinkle={1}
-        zoom={3}
-        backgroundGlow={0.5}
-        opacity={1}
-        mouseInteraction
-        mouseStrength={0.5}
-        mouseRadius={1}
-      />
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+        <GridDistortion
+          imageSrc="https://images.unsplash.com/photo-1620121692029-d088224ddc74?q=80&w=3432&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          grid={12}
+          mouse={0.12}
+          strength={0.18}
+          relaxation={0.92}
+          className="absolute inset-0"
+        />
+      </div>
+
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 1,
+        background: 'radial-gradient(circle at center, rgba(10, 16, 35, 0.08) 0%, rgba(10, 16, 35, 0.35) 100%)'
+      }} />
+
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 2,
+        backdropFilter: 'blur(1px)'
+      }} />
 
       {/* Centered overlay */}
       <div style={{
         position: 'absolute',
         inset: 0,
+        zIndex: 3,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -52,15 +61,15 @@ export function App() {
         {/* Title */}
         <h1 style={{
           fontFamily: "'Inter', 'Segoe UI', sans-serif",
-          fontSize: 'clamp(3rem, 10vw, 7rem)',
-          fontWeight: 800,
+          fontSize: 'clamp(2.5rem, 10vw, 4rem)',
+          fontWeight: 600,
           color: '#ffffff',
           letterSpacing: '-0.03em',
           textShadow: '0 0 40px rgba(166, 200, 255, 0.6), 0 4px 24px rgba(0,0,0,0.4)',
           margin: 0,
           userSelect: 'none',
         }}>
-          untitled
+          Would you go on a date with me zee?
         </h1>
 
         {/* Buttons */}
@@ -86,12 +95,12 @@ export function App() {
               transition: 'transform 0.15s ease, box-shadow 0.15s ease',
             }}
             onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.07)';
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 6px 32px rgba(82, 39, 255, 0.7)';
+              e.currentTarget.style.transform = 'scale(1.07)';
+              e.currentTarget.style.boxShadow = '0 6px 32px rgba(82, 39, 255, 0.7)';
             }}
             onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 24px rgba(82, 39, 255, 0.5)';
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 4px 24px rgba(82, 39, 255, 0.5)';
             }}
           >
             Yes
@@ -124,13 +133,13 @@ export function App() {
       </div>
 
       {/* Floating No button that dodges the cursor */}
-      {noPos && (
+      {floatingNoPos && (
         <button
           id="btn-no"
           style={{
             position: 'fixed',
-            top: noPos.top,
-            left: noPos.left,
+            top: floatingNoPos.top,
+            left: floatingNoPos.left,
             padding: '0.75rem 2.5rem',
             fontSize: '1.1rem',
             fontWeight: 600,

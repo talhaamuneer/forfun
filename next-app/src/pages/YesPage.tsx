@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Lightfall from '../components/Lightfall';
+import GridDistortion from '../components/GridDistortion';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 function getNext10Days() {
@@ -36,12 +36,15 @@ const ACTIVITIES = [
   { emoji: '🍝', label: 'Food' },
   { emoji: '🍹', label: 'Drinks' },
   { emoji: '☕', label: 'Coffee' },
-  { emoji: '🌳', label: 'Dolmen Mall' },
-  { emoji: '🥊', label: 'Stationary Shopping' },
-  { emoji: '🕵️', label: 'Arcade' },
-  { emoji: '✨', label: "Readings/Liberty Books"},
-  { emoji: '✨', label: "What would you like bubbles?"},
+  { emoji: '🥰', label: 'Dolmen Mall' },
+  { emoji: '✏️', label: 'Stationary Shopping' },
+  { emoji: '🕹️', label: 'Arcade' },
+  { emoji: '📕', label: "Readings/Liberty Books"},
+  { emoji: '🎬', label: 'Cinema' },
+  { emoji: '✨', label: 'What do you say bubbles?'},
 ];
+
+const BUBBLES_PROMPT = 'What do you say bubbles?';
 
 // ─── shared styles ───────────────────────────────────────────────────────────
 const font = "'Inter', 'Segoe UI', sans-serif";
@@ -72,6 +75,23 @@ const sectionLabel: React.CSSProperties = {
   marginBottom: 10,
 };
 
+function resolveActivities(activities: string[], bubbleItem: string) {
+  const resolved: string[] = [];
+
+  activities.forEach(activity => {
+    if (activity === BUBBLES_PROMPT) {
+      if (bubbleItem) {
+        resolved.push(bubbleItem);
+      }
+      return;
+    }
+
+    resolved.push(activity);
+  });
+
+  return resolved;
+}
+
 // ─── component ───────────────────────────────────────────────────────────────
 export default function YesPage() {
   const navigate = useNavigate();
@@ -80,10 +100,11 @@ export default function YesPage() {
   const [selectedDay,      setSelectedDay]      = useState<number | null>(null);
   const [selectedTime,     setSelectedTime]     = useState<string | null>(null);
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
+  const [bubbleMessage, setBubbleMessage] = useState('');
 
-  const isWeekend = selectedDay !== null
-    ? [0, 6].includes(days[selectedDay].getDay())
-    : false;
+  const isWeekend = selectedDay === null
+    ? false
+    : [0, 6].includes(days[selectedDay].getDay());
 
   const times = isWeekend ? WEEKEND_TIMES : WEEKDAY_TIMES;
 
@@ -99,47 +120,59 @@ export default function YesPage() {
   }
 
   const activities = isWeekend ? ACTIVITIES : ACTIVITIES_FOR_WEEKDAYS;
+  const hasBubblePrompt = selectedActivities.includes(BUBBLES_PROMPT);
+  const bubbleItem = bubbleMessage.trim();
+  const bubbleIncomplete = hasBubblePrompt && bubbleItem.length === 0;
+  const resolvedActivities = resolveActivities(selectedActivities, bubbleItem);
 
   // toggle an activity in/out of the selection
   function toggleActivity(label: string) {
     setSelectedActivities(prev =>
-      prev.includes(label) ? prev.filter(a => a !== label) : [...prev, label]
+      prev.includes(label)
+        ? prev.filter(a => a !== label)
+        : [...prev, label]
     );
+    if (label === BUBBLES_PROMPT && selectedActivities.includes(label)) {
+      setBubbleMessage('');
+    }
   }
 
   // CTA state
-  const hasFood   = selectedActivities.includes('Food');
-  const hasDrinks = selectedActivities.includes('Drinks');
+  const hasFood   = resolvedActivities.includes('Food');
+  const hasDrinks = resolvedActivities.includes('Drinks');
   const hasAny    = selectedActivities.length > 0;
   let ctaText = 'Pick a time to continue';
   let ctaEnabled = false;
-  if (selectedDay !== null && !selectedTime) {
-    ctaText = 'Pick a time to continue';
-  } else if (selectedTime && !hasAny) {
-    ctaText = 'Pick an activity to continue';
-  } else if (selectedTime && hasAny && selectedDay !== null) {
+  if (selectedDay !== null && selectedTime) {
+    if (!hasAny) {
+      ctaText = 'Pick an activity to continue';
+    } else if (bubbleIncomplete) {
+      ctaText = 'Type the message to continue';
+    } else {
     const d = days[selectedDay];
     const dayStr = `${DAY_ABBR[d.getDay()]} ${MONTH_ABBR[d.getMonth()]} ${d.getDate()}`;
     if (hasFood) {
       ctaText = `Next — pick a cuisine 🍽️`;
     } else if (hasDrinks) {
-      ctaText = `Lock in ${dayStr} at ${selectedTime} 🍹`;
+      ctaText = `Lock in ${dayStr} at ${selectedTime} hehe?`;
     } else {
-      ctaText = `Lock in ${dayStr} at ${selectedTime} 💕`;
+      ctaText = `Lock in ${dayStr} at ${selectedTime} hehe?`;
     }
     ctaEnabled = true;
+    }
   }
 
   function handleCta() {
     if (!ctaEnabled || selectedDay === null || !selectedTime || !hasAny) return;
     const d = days[selectedDay];
     const dayStr = `${DAY_ABBR[d.getDay()]} ${MONTH_ABBR[d.getMonth()]} ${d.getDate()}`;
+    const items = resolvedActivities;
     if (hasFood) {
-      navigate('/food', { state: { day: dayStr, time: selectedTime, otherActivities: selectedActivities.filter(a => a !== 'Food') } });
+      navigate('/food', { state: { day: dayStr, time: selectedTime, otherActivities: items.filter(a => a !== 'Food') } });
     } else if (hasDrinks) {
-      navigate('/confirmed', { state: { day: dayStr, time: selectedTime, items: selectedActivities, emoji: '🍹' } });
+      navigate('/confirmed', { state: { day: dayStr, time: selectedTime, items, emoji: '🍹' } });
     } else {
-      navigate('/confirmed', { state: { day: dayStr, time: selectedTime, items: selectedActivities, emoji: '✨' } });
+      navigate('/confirmed', { state: { day: dayStr, time: selectedTime, items, emoji: '✨' } });
     }
   }
 
@@ -147,22 +180,13 @@ export default function YesPage() {
     <div style={{ width: '100%', minHeight: '100vh', position: 'relative' }}>
       {/* ── background ── */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}>
-        <Lightfall
-          colors={['#A6C8FF', '#5227FF', '#FF9FFC']}
-          backgroundColor="#0A29FF"
-          speed={0.5}
-          streakCount={2}
-          streakWidth={1}
-          streakLength={1}
-          glow={1}
-          density={0.6}
-          twinkle={1}
-          zoom={3}
-          backgroundGlow={0.5}
-          opacity={1}
-          mouseInteraction
-          mouseStrength={0.5}
-          mouseRadius={1}
+        <GridDistortion
+          imageSrc="https://images.unsplash.com/photo-1620121692029-d088224ddc74?q=80&w=3432&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          grid={12}
+          mouse={0.12}
+          strength={0.18}
+          relaxation={0.92}
+          className="absolute inset-0"
         />
       </div>
 
@@ -215,7 +239,7 @@ export default function YesPage() {
               <span style={{ fontStyle: 'italic', color: '#A6C8FF' }}>time.</span>
             </h1>
             <p style={{ fontFamily: font, fontSize: '0.97rem', color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1.6 }}>
-              You said yes (legally binding). Now the fun part — when are we doing this?
+              You said yes (legally binding btw). soo when are we doing this?
             </p>
           </div>
 
@@ -225,7 +249,7 @@ export default function YesPage() {
             <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'none' }}>
               {days.map((d, i) => (
                 <button
-                  key={i}
+                  key={d.toISOString()}
                   onClick={() => pickDay(i)}
                   style={{
                     ...glassCard(selectedDay === i),
@@ -331,6 +355,31 @@ export default function YesPage() {
               </div>
             </section>
           )}
+
+          {selectedTime && selectedActivities.includes(BUBBLES_PROMPT) && (
+            <section style={{ animation: 'fadeSlideUp 0.35s cubic-bezier(0.22,1,0.36,1) both' }}>
+              <p style={sectionLabel}>YOUR MESSAGE</p>
+              <input
+                value={bubbleMessage}
+                onChange={e => setBubbleMessage(e.target.value)}
+                placeholder="Write the thing you want to say..."
+                maxLength={80}
+                style={{
+                  width: '100%',
+                  padding: '14px 18px',
+                  borderRadius: 16,
+                  border: '1.5px solid rgba(255,255,255,0.14)',
+                  background: 'rgba(255,255,255,0.08)',
+                  color: '#fff',
+                  fontFamily: font,
+                  fontSize: '0.98rem',
+                  outline: 'none',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+                }}
+              />
+            </section>
+          )}
         </div>
 
         {/* ── CTA ── */}
@@ -367,9 +416,9 @@ export default function YesPage() {
               transform: ctaEnabled ? 'scale(1)' : 'scale(0.98)',
               opacity: ctaEnabled ? 1 : 0.5,
             }}
-          onClick={handleCta}
-            onMouseEnter={e => { if (ctaEnabled) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.02)'; }}
-            onMouseLeave={e => { if (ctaEnabled) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+            onClick={handleCta}
+            onMouseEnter={e => { if (ctaEnabled) e.currentTarget.style.transform = 'scale(1.02)'; }}
+            onMouseLeave={e => { if (ctaEnabled) e.currentTarget.style.transform = 'scale(1)'; }}
           >
             {ctaText}
           </button>
