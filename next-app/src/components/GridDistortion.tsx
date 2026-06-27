@@ -90,7 +90,8 @@ const GridDistortion: React.FC<GridDistortionProps> = ({
       texture.magFilter = THREE.LinearFilter;
       texture.wrapS = THREE.ClampToEdgeWrapping;
       texture.wrapT = THREE.ClampToEdgeWrapping;
-      imageAspectRef.current = texture.image.width / texture.image.height;
+      const image = texture.image as { width: number; height: number };
+      imageAspectRef.current = image.width / image.height;
       uniforms.uTexture.value = texture;
       handleResize();
     });
